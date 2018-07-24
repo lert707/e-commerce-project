@@ -224,6 +224,7 @@ export default {
     methods: {
         // 获取商品详情
         getData() {
+            console.log($(this.$refs.startIndex).offset())
             this.$axios.get(`site/goods/getgoodsinfo/${this.$route.params.id}`).then(res=>{
                 this.goodsdetail = res.data.message
 
@@ -264,6 +265,7 @@ export default {
             const url = `site/validate/comment/post/goods/${this.$route.params.id}`
             this.$axios.post(url,{commenttxt: comment}).then(res=>{
                 if(res.data.status == 0) {
+                    this.$refs.textarea.value = ''
                     this.$message({
                         showClose: true,
                         message: '评论成功',
@@ -281,7 +283,7 @@ export default {
             let obj = {}
             if (window.localStorage.getItem("cart")) {
                 obj= JSON.parse(window.localStorage.getItem("cart"));
-                obj[id] = parseInt(obj[id]) + parseInt(this.buyCount)
+                obj[id] = parseInt(this.buyCount) + ( parseInt(obj[id]) || 0)
             } else {
                 obj[id] = this.buyCount
             }
