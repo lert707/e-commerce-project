@@ -4,6 +4,13 @@ import VueRouter from 'vue-router'
 import ElementUI from 'element-ui'
 import Moment from 'moment'
 import axios from 'axios'
+import VueLazyLoad from 'vue-lazyload'
+
+Vue.use(VueLazyLoad,{
+    preLoad: 1.3,
+    loading: require('./statics/site/images/loading.gif'),
+    attempt: 1
+})
 
 Vue.use(VueRouter)
 Vue.use(ElementUI)
