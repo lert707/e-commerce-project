@@ -80,9 +80,10 @@
                                 </td>
                                 <td width="84" align="left">{{item.sell_price}}</td>
                                 <td width="104" align="center">
-                                    <el-input-number size="mini" v-model="item.buycount" :min="1" :max="10"></el-input-number>
+                                    <!-- <el-input-number size="mini" v-model="item.buycount" :min="1" :max="10"></el-input-number> -->
+                                    <inputnumber :inputCount="item.buycount" v-on:sub="subCount" v-on:sum="sumCount"></inputnumber>
                                 </td>
-                                <td width="104" align="left">金额(元)</td>
+                                <td width="104" align="left">{{item.sell_price * item.buycount}}</td>
                                 <td width="54" align="center">
                                     <router-link to="">删除</router-link>
                                 </td>
@@ -90,9 +91,9 @@
                             <tr>
                                 <th align="right" colspan="8">
                                     已选择商品
-                                    <b class="red" id="totalQuantity">0</b> 件 &nbsp;&nbsp;&nbsp; 商品总金额（不含运费）：
+                                    <b class="red" id="totalQuantity">{{getTotalData.totalCount}}</b> 件 &nbsp;&nbsp;&nbsp; 商品总金额（不含运费）：
                                     <span class="red">￥</span>
-                                    <b class="red" id="totalAmount">0</b>元
+                                    <b class="red" id="totalAmount">{{getTotalData.totalPrice}}</b>元
                                 </th>
                             </tr>
                         </tbody>
@@ -114,7 +115,11 @@
 </template>
 
 <script>
+import inputnumber from '../subcomponents/inputnumber'
 export default {
+    components: {
+        inputnumber
+    },
     data() {
         return {
             cartGoods: {},
@@ -122,7 +127,20 @@ export default {
         }
     },
     computed: {
-        
+        // 获取总数量与总价格
+        getTotalData() {
+            let totalCount = 0
+            let totalPrice = 0
+
+            this.cartGoods.forEach(item=>{
+                if (item.selected) {
+                    totalCount += item.buycount
+                    totalPrice += item.buycount * item.sell_price
+                }
+            })
+
+            return {totalCount,totalPrice}
+        }
     },
     created() {
         this.getCartData()
@@ -131,17 +149,39 @@ export default {
         // 获取购物车数据
         getCartData() {
             // 通过本地存储
-            if (window.localStorage.getItem("cart")) {
-                const cart = JSON.parse(window.localStorage.getItem("cart"))
-                this.$axios.get(`site/comment/getshopcargoods/${Object.keys(cart).join(",")}`).then(res=>{
-                    res.data.message.forEach((element,index) => {
-                        element.selected = true
-                        element.buycount = (Object.values(cart))[index]
+            // if (window.localStorage.getItem("cart")) {
+            //     const cart = JSON.parse(window.localStorage.getItem("cart"))
+            //     this.$axios.get(`site/comment/getshopcargoods/${Object.keys(cart).join(",")}`).then(res=>{
+            //         res.data.message.forEach((element,index) => {
+            //             element.selected = true
+            //             element.buycount = (Object.values(cart))[index]
                         
-                    });
-                    this.cartGoods = res.data.message
-                })
-            }
+            //         });
+            //         this.cartGoods = res.data.message
+            //     })
+            // }
+
+            // 通过vuex获取本地存储中的购物车数据
+            this.$store.commit('getLocalCart')
+            const cart = this.$store.getters.getLocalCart
+            // 如果没有数据，结束
+            if (Object.keys(cart).length === 0) return
+            // 发送请求接收数据渲染
+            this.$axios.get(`site/comment/getshopcargoods/${Object.keys(cart).join(",")}`).then(res=>{
+                res.data.message.forEach((item,index) => {
+                    item.selected = true
+                    item.buycount = cart[item.id]  
+                });
+                this.cartGoods = res.data.message
+            })
+
+        },
+
+        subCount(childValue) {
+            // console.log(childValue)
+        },
+        sumCount(childValue) {
+            // console.log(childValue)
         }
     }
 };

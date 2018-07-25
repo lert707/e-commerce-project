@@ -224,7 +224,6 @@ export default {
     methods: {
         // 获取商品详情
         getData() {
-            console.log($(this.$refs.startIndex).offset())
             this.$axios.get(`site/goods/getgoodsinfo/${this.$route.params.id}`).then(res=>{
                 this.goodsdetail = res.data.message
 
@@ -276,18 +275,25 @@ export default {
                 this.getCommentsData()
             })
         },
-        //  获取动画开始前的位置 
+        //  添加购物车
         addCart() {
-            const id = this.$route.params.id
+            // 购物车动画显示
             this.isShowCart = true
-            let obj = {}
-            if (window.localStorage.getItem("cart")) {
-                obj= JSON.parse(window.localStorage.getItem("cart"));
-                obj[id] = parseInt(this.buyCount) + ( parseInt(obj[id]) || 0)
-            } else {
-                obj[id] = this.buyCount
+            // vuex
+            const goods = {
+                goodsId: this.$route.params.id,
+                count: this.buyCount
             }
-            window.localStorage.setItem("cart",JSON.stringify(obj))
+            this.$store.commit('addGoods',goods)
+            // const id = this.$route.params.id
+            // let obj = {}
+            // if (window.localStorage.getItem("cart")) {
+            //     obj= JSON.parse(window.localStorage.getItem("cart"));
+            //     obj[id] = parseInt(this.buyCount) + ( parseInt(obj[id]) || 0)
+            // } else {
+            //     obj[id] = this.buyCount
+            // }
+            // window.localStorage.setItem("cart",JSON.stringify(obj))
         },
         // 购物车动画
         beforeEnter: function(el) {
