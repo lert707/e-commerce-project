@@ -28,3 +28,21 @@ export const addLocalGoods = goods => {
   // 将最新的总数量返回   
   return getLocalTotalCount();
 };
+
+// 修改本地存储中的购物车数据
+export const updateLocalGoods = goods =>{
+  const cart = getLocalGoods();
+  cart[goods.id] = goods.buycount
+  localStorage.setItem("cart", JSON.stringify(cart));
+  // 将最新的总数量返回   
+  return getLocalTotalCount();
+}
+
+// 删除本地存储中的购物车数据
+export const deleteLocalGoods = goodsId => {
+  const cart = getLocalGoods();
+  delete cart[goodsId]
+  localStorage.setItem("cart", JSON.stringify(cart));
+  // 将最新的总数量返回   
+  return getLocalTotalCount();
+}

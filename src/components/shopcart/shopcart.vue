@@ -81,11 +81,11 @@
                                 <td width="84" align="left">{{item.sell_price}}</td>
                                 <td width="104" align="center">
                                     <!-- <el-input-number size="mini" v-model="item.buycount" :min="1" :max="10"></el-input-number> -->
-                                    <inputnumber :inputCount="item.buycount" v-on:sub="subCount" v-on:sum="sumCount"></inputnumber>
+                                    <inputnumber :goodsId="item.id" :inputCount="item.buycount" @changeCount="changeCount"></inputnumber>
                                 </td>
                                 <td width="104" align="left">{{item.sell_price * item.buycount}}</td>
                                 <td width="54" align="center">
-                                    <router-link to="">删除</router-link>
+                                    <el-button type="text" @click="deleteGoods(item.id)">删除</el-button>
                                 </td>
                             </tr>
                             <tr>
@@ -103,8 +103,8 @@
                 <!--购物车底部-->
                 <div class="cart-foot clearfix">
                     <div class="right-box">
-                        <button class="button" onclick="javascript:location.href='/index.html';">继续购物</button>
-                        <button class="submit" onclick="formSubmit(this, '/', '/shopping.html');">立即结算</button>
+                        <button class="button" @click="continueBuy">继续购物</button>
+                        <button class="submit" @click="submitOrder">提交订单</button>
                     </div>
                 </div>
                 <!--购物车底部-->
@@ -122,8 +122,7 @@ export default {
     },
     data() {
         return {
-            cartGoods: {},
-            selected: true
+            cartGoods: {}
         }
     },
     computed: {
@@ -131,14 +130,12 @@ export default {
         getTotalData() {
             let totalCount = 0
             let totalPrice = 0
-
             this.cartGoods.forEach(item=>{
                 if (item.selected) {
                     totalCount += item.buycount
                     totalPrice += item.buycount * item.sell_price
                 }
             })
-
             return {totalCount,totalPrice}
         }
     },
@@ -177,11 +174,56 @@ export default {
 
         },
 
-        subCount(childValue) {
-            // console.log(childValue)
+        // 子组件传值过来,修改商品
+        changeCount(changeCount) {
+            this.cartGoods.forEach(item=>{
+                if (item.id == changeCount.id) {
+                    item.buycount = changeCount.buycount
+                }
+            })
+            this.$store.commit('updateGoods',changeCount)
         },
-        sumCount(childValue) {
-            // console.log(childValue)
+
+        // 删除商品
+        deleteGoods(id) {
+            this.$confirm('此操作将永久删除该商品, 是否继续?', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+            }).then(() => {
+                this.$store.commit("deleteGoods",id)
+                this.cartGoods.forEach((item,index)=>{
+                    if (item.id == id ) {
+                        this.cartGoods.splice(index,1)
+                    }
+                })
+            }).catch(() => {
+                         
+            });
+        },
+
+        // 继续购物
+        continueBuy() {
+            this.$router.push('goodslist')
+        },
+
+        // 提交订单
+        submitOrder() {
+            const tempGoods = []
+            this.cartGoods.forEach(item=>{
+                if (item.selected) {
+                    tempGoods.push(item.id)
+                }
+            })
+            if (tempGoods.length === 0) {
+                this.$message({
+                    showClose: true,
+                    message: '至少要选择一条商品进行下单操作！',
+                    type: 'warning'
+                });
+                return
+            }
+            this.$router.push({ path: 'order', query: { ids: tempGoods.join(',') }})
         }
     }
 };

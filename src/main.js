@@ -19,6 +19,7 @@ Vue.use(Vuex);
 
 Vue.prototype.$axios = axios;
 axios.defaults.baseURL = "http://47.106.148.205:8899/";
+axios.defaults.withCredentials = true
 
 Vue.filter("dateFmt", (input, dateFmtStr = "YYYY-MM-DD") => {
   return Moment(input).format(dateFmtStr);
@@ -30,17 +31,41 @@ import "element-ui/lib/theme-chalk/index.css";
 import goodslist from "./components/goods/goodslist.vue";
 import shopcart from "./components/shopcart/shopcart.vue";
 import goodsdetail from "./components/goods/goodsdetail.vue";
+import login from "./components/account/login.vue"
+import order from "./components/order/order.vue"
+import payOrder from "./components/pay/payOrder.vue"
+
 
 const router = new VueRouter({
   routes: [
     { path: "/", redirect: "/goodslist" },
     { path: "/goodslist", component: goodslist },
     { path: "/shopcart", component: shopcart },
-    { path: "/goodsinfo/:id", component: goodsdetail }
+    { path: "/goodsinfo/:id", component: goodsdetail },
+    { path: "/login", component: login},
+    { path: '/order', component: order, meta: {needLogin: true}},
+    { path: '/payOrder', component: payOrder, meta: {needLogin: true}}
   ]
 });
 
-import {addLocalGoods,getLocalTotalCount,getLocalGoods} from './common/localstorageHelper.js'
+router.beforeEach((to,from,next)=>{
+  if (to.fullPath != '/login') {
+    localStorage.setItem('lastPath',to.fullPath)
+  }
+  if (to.meta.needLogin) {
+    axios.get(`site/account/islogin`).then(res=>{
+      if(res.data.code === 'nologin'){//未登录
+          router.push('login')
+      }else{//登录
+          next()
+      }
+    })
+  } else {
+    next()
+  }
+})
+
+import {addLocalGoods,getLocalTotalCount,getLocalGoods,updateLocalGoods, deleteLocalGoods} from './common/localstorageHelper.js'
 
 const store = new Vuex.Store({
   state: {
@@ -76,9 +101,19 @@ const store = new Vuex.Store({
       // }
       // window.localStorage.setItem("cart", JSON.stringify(obj));
     },
+    // 获取本地存储中的购物车数据
     getLocalCart(state) {
       state.cart =  getLocalGoods()
+    },
+    // 修改vuex内的商品和本地存储中的数据
+    updateGoods(state,goods) {
+      state.totalCount = updateLocalGoods(goods)
+    },
+    // 删除vuex和本地存储中的商品数据
+    deleteGoods(state,goodsId) {
+      state.totalCount = deleteLocalGoods(goodsId)
     }
+
   }
 });
 

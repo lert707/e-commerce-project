@@ -11,16 +11,16 @@
                     <a target="_blank" href="#"></a>
                 </div>
                 <div id="menu" class="right-box">
-                    <span style="display: none;">
-                        <a href="" class="">登录</a>
+                    <span v-show="!isLogin">
+                        <router-link to="/login" class="">登录</router-link>
                         <strong>|</strong>
                         <a href="" class="">注册</a>
                         <strong>|</strong>
                     </span>
-                    <span>
+                    <span v-show="isLogin">
                         <a href="" class="">会员中心</a>
                         <strong>|</strong>
-                        <a>退出</a>
+                        <span @click="logout">退出</span>
                         <strong>|</strong>
                     </span>
                     <router-link to="/shopcart" class="" id="shoppingCart">
@@ -120,7 +120,43 @@
 
 <script>
 // import $ from 'jquery'
+import { bus } from "./common/bus.js";
 export default {
+  data() {
+    return {
+      isLogin: false
+    };
+  },
+  created() {
+    bus.$on("isLogin", isLogin => {
+      this.isLogin = isLogin;
+    });
+    this.checkLogin()
+  },
+  methods: {
+    //   检查用户是否登录
+    checkLogin() {
+      this.$axios.get("site/account/islogin").then(res => {
+        if (res.data.code === "logined") {
+          this.isLogin = true;
+        } else {
+          this.isLogin = false;
+        }
+      });
+    },
+    // 退出操作
+    logout() {
+      this.$axios.get("site/account/logout").then(res => {
+        if (res.data.status === 0) {
+          //更改App.vue头部的状态
+          this.isLogin = false;
+
+          //去首页
+          this.$router.push("goodslist");
+        }
+      });
+    }
+  },
   mounted() {
     $("#menu2 li a").wrapInner('<span class="out"></span>');
     $("#menu2 li a").each(function() {
@@ -150,5 +186,5 @@ export default {
 </script>
 
 <style scoped>
-  @import url('./statics/site/js/jqueryplugins/css/style.css');
+@import url("./statics/site/js/jqueryplugins/css/style.css");
 </style>
